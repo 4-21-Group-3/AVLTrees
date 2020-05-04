@@ -217,13 +217,13 @@ void Delete(Node* AtNode, int key)
 			else
 				Previous->leftSubtree = nullptr;
 
-			delete Seeker;
+			Seeker = nullptr;
 
 		}
 
 	}
 	else
-		delete AtNode;
+		AtNode = nullptr;
 
 	while (!(ForBalanceChecking.empty()))
 	{
