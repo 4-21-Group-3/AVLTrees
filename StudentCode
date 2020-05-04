@@ -1,5 +1,6 @@
 #include <iostream>
-#include<chrono>
+#include <chrono>
+#include <stack>
 
 using namespace std;
 
@@ -17,8 +18,8 @@ Node* CreateNode(int aValue)
 {
 	Node* aNode = new Node;
 	aNode->value = aValue;
-	aNode->rightSubtree = NULL;
-	aNode->leftSubtree = NULL;
+	aNode->rightSubtree = nullptr;
+	aNode->leftSubtree = nullptr;
 	aNode->Height = 1;
 	return aNode;
 }
@@ -27,7 +28,7 @@ Node* CreateNode(int aValue)
 //it is being compared to.
 int Height(Node* atNode)
 {
-	return atNode == NULL ? 0 : atNode->Height;
+	return atNode == nullptr ? 0 : atNode->Height;
 }
 
 int Max(int a, int b)
@@ -42,7 +43,7 @@ int Balance(Node* aNode)
 
 Node* Sling(Node* ProblemRoot, int Imbalance)
 {
-	Node* NewRoot = NULL;
+	Node* NewRoot = nullptr;
 	if (Imbalance < 0)
 	{
 		//Left Rotation
@@ -104,7 +105,7 @@ Node* Insert(Node* AtNode, int key)
 	//First, figure out where to put the node
 	//Go down the subtree to find where to put the node,
 	//But then you must also come back up the tree.
-	if (AtNode == NULL)
+	if (AtNode == nullptr)
 		return(CreateNode(key));
 
 	if (key > AtNode->value)
@@ -146,9 +147,121 @@ Node* Insert(Node* AtNode, int key)
 
 	return AtNode;
 }
+
+void Delete(Node* AtNode, int key)
+{
+
+	Node* Root = AtNode;
+	stack<Node*> ForBalanceChecking;
+
+	while (AtNode->value != key)
+	{
+
+		if (AtNode->value != key && (AtNode->leftSubtree == nullptr) && (AtNode->rightSubtree == nullptr))
+			return;
+
+		if (AtNode->value < key)
+			AtNode = AtNode->rightSubtree;
+		else
+			AtNode = AtNode->leftSubtree;
+
+		ForBalanceChecking.push(AtNode);
+
+	}
+
+	if (AtNode->leftSubtree != nullptr || AtNode->rightSubtree != nullptr)
+	{
+
+		if (AtNode->rightSubtree == nullptr)
+		{
+
+			Node* Seeker = AtNode->leftSubtree; //Seeks the rightmost node in the left sub-tree
+			Node* Previous = AtNode;
+
+			while ((Seeker->rightSubtree != nullptr) && (Seeker != nullptr))
+			{
+
+				ForBalanceChecking.push(Seeker);
+				Previous = Seeker;
+				Seeker = Seeker->rightSubtree;
+
+			}
+
+			AtNode->value = Seeker->value;
+
+			if (Seeker->leftSubtree != nullptr)
+				Previous->rightSubtree = Seeker->leftSubtree;
+
+			delete Seeker;
+
+		}
+		else
+		{
+
+			Node* Seeker = AtNode->rightSubtree; //Seeks the leftmost node in the right sub-tree
+			Node* Previous = AtNode;
+
+			while ((Seeker->leftSubtree != nullptr) && (Seeker != nullptr))
+			{
+
+				ForBalanceChecking.push(Seeker);
+				Previous = Seeker;
+				Seeker = Seeker->leftSubtree;
+
+			}
+
+			AtNode->value = Seeker->value;
+
+			if (Seeker->rightSubtree != nullptr)
+				Previous->leftSubtree = Seeker->rightSubtree;
+			else
+				Previous->leftSubtree = nullptr;
+
+			delete Seeker;
+
+		}
+
+	}
+	else
+		delete AtNode;
+
+	while (!(ForBalanceChecking.empty()))
+	{
+
+		int balance = Balance(ForBalanceChecking.top());
+
+		if (-1 > balance || 1 < balance)
+		{
+
+			if (balance > 1)
+			{
+
+				if (Balance(ForBalanceChecking.top()->leftSubtree) < 0)
+					Swap(ForBalanceChecking.top(), balance);
+				else
+					Sling(ForBalanceChecking.top(), balance);
+
+			}
+			else if (balance < -1)
+			{
+
+				if (Balance(ForBalanceChecking.top()->rightSubtree) > 0)
+					Swap(ForBalanceChecking.top(), balance);
+				else
+					Sling(ForBalanceChecking.top(), balance);
+
+			}
+
+		}
+		else
+			ForBalanceChecking.pop();
+
+	}
+}
+
 void preOrder(Node *root)
 {
-	if (root != NULL)
+	if (root != nullptr)
 	{
 		cout << root->value << " ";
 		preOrder(root->leftSubtree);
@@ -170,6 +283,8 @@ void main()
 	Root = Insert(Root, 13);
 
 	preOrder(Root);
+
+	Delete(Root, 11);
 
 	system("PAUSE");
 	return;
